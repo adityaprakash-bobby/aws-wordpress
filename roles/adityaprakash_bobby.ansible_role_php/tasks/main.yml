@@ -1,7 +1,7 @@
 ---
 # tasks file for ansible-role-php
 - name: Install software-properties-common
-  apt: name=software-properties-common state=installed
+  apt: name=software-properties-common state=present
 
 # Add ppa for installing PHP 7
 - name: Add the ondrej PHP PPA
@@ -12,7 +12,7 @@
 
 # Install PHP and remove apache
 - name: Install PHP
-  apt: name={{item}} state=installed
+  apt: name={{item}} state=present
   with_items:
   - php
   - php-fpm
@@ -20,4 +20,4 @@
   - php-xml
 
 - name: Remove apache
-  apt: name=apache2 state=removed
+  apt: name=apache2 state=absent

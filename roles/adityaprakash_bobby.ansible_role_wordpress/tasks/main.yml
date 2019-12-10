@@ -7,7 +7,7 @@
 - name: Install required tools
   apt:
     name: unzip
-    state: installed
+    state: present
 
 - name: Extract/unzip wordpress.zip
   unarchive: src=/tmp/wordpress.zip dest=/tmp copy=no creates=/tmp/wordpress/wp-settings.php
