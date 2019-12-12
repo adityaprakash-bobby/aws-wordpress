@@ -76,5 +76,5 @@
         name: ansible-aws
         region: "{{ aws_region }}"
         key_material: "{{ item }}"
-      with_file: /home/aditya/.ssh/id_rsa
+      with_file: /home/aditya/.ssh/id_rsa.pub
       register: ssh_key
