@@ -70,3 +70,11 @@
           - proto: all
             cidr_ip: 0.0.0.0/0
       register: security_group
+
+    - name: Create Key-Pair
+      ec2_key:
+        name: ansible-aws
+        region: "{{ aws_region }}"
+        key_material: "{{ item }}"
+      with_file: /home/aditya/.ssh/id_rsa
+      register: ssh_key
