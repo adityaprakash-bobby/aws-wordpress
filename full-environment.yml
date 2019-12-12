@@ -1,0 +1,72 @@
+---
+- name: Configure AWS Resources
+  hosts: all
+  connection: local
+  gather_facts: False
+  vars:
+    aws_region: ap-south-1
+  tasks:
+    - name: Ping Local Machine
+      ping:
+    
+    - name: Create a VPC
+      ec2_vpc_net:
+        name: AnsibleAWS
+        state: present
+        region: "{{ aws_region }}"
+        cidr_block: 10.10.0.0/16
+        tags:
+          Environment: Development
+      register: vpc
+    - debug: var=vpc
+
+    - name: Ensure Internet Gateway for VPC
+      ec2_vpc_igw:
+        state: present
+        region: "{{ aws_region }}"
+        vpc_id: "{{ vpc.vpc.id }}"
+      register: igw
+    
+    - name: Create Subnets for VPC
+      ec2_vpc_subnet:
+        state: present
+        region: "{{ aws_region }}"
+        vpc_id: "{{ vpc.vpc.id }}"
+        cidr: 10.10.0.0/24
+        resource_tags:
+          Environment: Development
+      register: subnets
+    
+    - name: Enable Internet for subnets
+      ec2_vpc_route_table:
+        region: "{{ aws_region }}"
+        vpc_id: "{{ vpc.vpc.id }}"
+        tags:
+          Name: Public
+        subnets:
+          - "{{ subnets.subnet.id }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ igw.gateway_id }}"
+      register: public_routes
+
+    - name: Create Security Group
+      ec2_group:
+        name: ansible-aws-demo
+        state: present
+        region: "{{ aws_region }}"
+        vpc_id: "{{ vpc.vpc.id }}"
+        description: A SecGroup for websever
+        rules:
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 2
+            to_port: 22
+            cidr_ip: 0.0.0.0/0
+        rules_egress:
+          - proto: all
+            cidr_ip: 0.0.0.0/0
+      register: security_group
