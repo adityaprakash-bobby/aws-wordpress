@@ -5,6 +5,7 @@
   gather_facts: False
   vars:
     aws_region: ap-south-1
+    aws_az: ap-south-1a
   tasks:
     - name: Ping Local Machine
       ping:
@@ -18,7 +19,7 @@
         tags:
           Environment: Development
       register: vpc
-    - debug: var=vpc
+    # - debug: var=vpc
 
     - name: Ensure Internet Gateway for VPC
       ec2_vpc_igw:
@@ -30,6 +31,7 @@
     - name: Create Subnets for VPC
       ec2_vpc_subnet:
         state: present
+        az: "{{ aws_az }}"
         region: "{{ aws_region }}"
         vpc_id: "{{ vpc.vpc.id }}"
         cidr: 10.10.0.0/24
@@ -78,3 +80,23 @@
         key_material: "{{ item }}"
       with_file: /home/aditya/.ssh/id_rsa.pub
       register: ssh_key
+    # - debug: var=ssh_key
+    
+    - name: Create Instances
+      ec2:
+        image: ami-0123b531fc646552f
+        region: "{{ aws_region }}"
+        instance_type: t2.micro
+        instance_tags:
+          project: AnsibleWordpressAuto
+        count_tag: 
+          project: AnsibleWordpressAuto
+        exact_count: 1
+        vpc_subnet_id: "{{ subnets.subnet.id }}"
+        group_id: "{{ security_group.group_id }}"
+        key_name: "{{ ssh_key.results[0].key.name }}"
+        zone: "{{ aws_az }}"
+        wait: yes
+        assign_public_ip: True
+      register: instances
+    - debug: msg="{{instances.tagged_instances[0].public_dns_name}}"
