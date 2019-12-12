@@ -1,6 +1,6 @@
 ---
 - name: Install WordPress on EC2
-  hosts: all
+  hosts: tag_project_AnsibleWordpress
   become: true
   tasks:
     - name: Ping remote server
